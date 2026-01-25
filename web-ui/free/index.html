@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Free Play</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="page">
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="app-header">
+      <div>
+        <p class="eyebrow" data-i18n="free.eyebrow">Free Play</p>
+        <h1 data-i18n="free.title">Move the Robot</h1>
+        <p class="subtitle" data-i18n="free.subtitle">
+          Discreet: hold Left Click = Up, hold Right Click = Down. Expressive: arrow keys.
+        </p>
+      </div>
+      <div class="header-tools">
+        <button id="lang-toggle" class="ghost small" type="button"></button>
+        <button id="esp-mode-toggle" class="ghost small" type="button"></button>
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span id="connection-status" data-i18n="status.connecting">Connecting...</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="screens">
+      <section class="screen active">
+        <div class="top-bar">
+          <button id="back-home" class="ghost" data-i18n="free.back">Back</button>
+          <span class="mode-pill"><span data-i18n="free.control">Control:</span> <span id="preset-label">discreet</span></span>
+          <span class="mode-pill"><span data-i18n="free.step">Step/Speed:</span> <span id="step-label">4</span></span>
+        </div>
+
+        <div class="grid-two">
+          <div class="card inner">
+            <h3 data-i18n="free.telemetry">Telemetry</h3>
+            <div class="telemetry">
+              <div>
+                <span class="label" data-i18n="free.pan">Pan</span>
+                <strong id="pan">--</strong>
+              </div>
+              <div>
+                <span class="label" data-i18n="free.tilt">Tilt</span>
+                <strong id="tilt">--</strong>
+              </div>
+            </div>
+            <div class="controls">
+              <div class="control-pad">
+                <button data-move="up" data-i18n="direction.up">UP</button>
+                <button data-move="left" data-i18n="direction.left">LEFT</button>
+                <button data-move="right" data-i18n="direction.right">RIGHT</button>
+                <button data-move="down" data-i18n="direction.down">DOWN</button>
+              </div>
+              <div class="button-row">
+                <button data-command="HOME" data-i18n="free.home">Home</button>
+                <button data-command="CENTER" data-i18n="free.center">Center</button>
+                <button data-command="STATUS" data-i18n="free.status">Status</button>
+              </div>
+              <div class="sliders">
+                <label>
+                  <span data-i18n="free.pan">Pan</span>
+                  <input id="pan-slider" type="range" min="0" max="180" value="90" />
+                </label>
+                <label>
+                  <span data-i18n="free.tilt">Tilt</span>
+                  <input id="tilt-slider" type="range" min="0" max="180" value="60" />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card inner">
+            <h3 data-i18n="free.control_style">Control Style</h3>
+            <div class="preset-row">
+              <button class="preset-button small" data-preset="discreet" data-i18n="preset.discreet">Discreet</button>
+              <button class="preset-button small" data-preset="expressive" data-i18n="preset.expressive">Expressive</button>
+            </div>
+            <label class="step-control">
+              <span data-i18n="free.step_label">Step / Speed</span>
+              <input id="step" type="number" min="1" max="20" value="4" />
+            </label>
+
+            <div id="gesture-debug" class="inline-note hidden" data-i18n="free.gesture_debug">
+              Gesture style selected. (Wristband integration goes here.)
+            </div>
+
+            <button id="mouse-lock" class="mouse-lock" type="button"></button>
+          </div>
+        </div>
+
+        <div class="card log-panel">
+          <div class="log-header">
+            <span data-i18n="free.log">Log</span>
+            <button id="clear-log" class="ghost" data-i18n="free.clear">Clear</button>
+          </div>
+          <div id="log-entries"></div>
+        </div>
+      </section>
+    </main>
+
+    <div id="overlay" class="overlay hidden" aria-live="polite">
+      <div class="overlay-card">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+          <div class="overlay-title" data-i18n="overlay.connecting">Connecting to ESP...</div>
+          <div class="overlay-sub" data-i18n="overlay.return_home">Returning to home if not available.</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/free/app.js"></script>
+  </body>
+</html>

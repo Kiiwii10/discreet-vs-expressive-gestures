@@ -1,0 +1,562 @@
+\PassOptionsToPackage{protrusion=true,expansion=false}{microtype}
+\documentclass[sigconf,balance=false]{acmart}
+\raggedbottom
+
+
+% ---- MiKTeX/pdfLaTeX font fix (avoids LinLibertine PK build failures) ----
+\ifPDFTeX
+  \usepackage{lmodern}
+  \renewcommand{\rmdefault}{lmr}
+  \renewcommand{\sfdefault}{lmss}
+  \renewcommand{\ttdefault}{lmtt}
+\fi
+
+\makeatletter
+\renewcommand{\twocolumn}[1][]{%
+  \if\relax\detokenize{#1}\relax\else #1\par\fi
+}
+\makeatother
+
+% --- Draft/internal settings ---
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\setcopyright{none}
+
+
+% Figures + tables directory conventions
+\usepackage{graphicx}
+\graphicspath{{figures/}{figures/plots/}{figures/raw/}}
+
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{subcaption} % for multi-panel figures
+\usepackage{float}
+
+% Override acmart defaults: make figure/table captions non-bold
+\captionsetup[figure]{labelfont=normalfont,textfont=normalfont}
+\captionsetup[table]{labelfont=normalfont,textfont=normalfont}
+\captionsetup[sub]{labelfont=normalfont,textfont=normalfont}
+
+\newcommand{\gestureicon}[1]{\includegraphics[height=0.9em]{#1}}
+
+% --- Metadata ---
+\title{Discreet vs.\ Expressive Gestures for Controlling Physical Moving Objects in Public}
+
+\author{Daniel Moroz}
+\email{daniellebed@campus.technion.ac.il}
+
+\begin{abstract}
+Gesture-based interaction offers an intuitive way to control robots and drones, but it introduces a social friction point:
+operators must perform visible, embodied actions that can feel awkward or attention-drawing in public.
+Prior work on mobile and head-worn devices shows that social context and how noticeable a gesture appears influence willingness to perform it in public
+(e.g., \cite{Rico2010Usable,Montero2010Understanding,Hsieh2016Willing,Profita2013DontMindMe}).
+In contrast, human-drone interaction and UAV gesture-metaphor work often yields larger, spatial, and metaphor-driven movements for commanding a visible flying robot
+(e.g., \cite{Cauchard2015DroneMe,Pfeil2013UAVGestures}).
+We examine this tension by studying how gesture style (discreet vs.\ expressive) and social context (private vs.\ public with bystanders)
+shape operator preference, perceived control, and willingness to use gesture control for a clearly visible 2DOF pan--tilt robot whose on-board LEDs indicate target direction and progress.
+We attempted to collect brief bystander impressions via in-situ intercept prompts during public blocks; however, participation was low and incomplete, so we focus our analysis on operator self-report and system telemetry (time, completion, and gesture counts) captured by the study system.\\
+All code and materials are available at: \url{https://github.com/Kiiwii10/discreet-vs-expressive-gestures}
+\end{abstract}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+\section{Introduction}
+Gesture control is a promising modality for spatial computing, drones, and mobile robots, but it comes with a distinctive social risk:
+control is enacted through visible, embodied movements that can appear unusual, attention-seeking, or difficult to interpret.
+A consistent theme in mobile and wearable interaction is that users avoid gestures that feel socially awkward or draw unwanted attention,
+especially in the presence of an audience \cite{Rico2010Usable,Montero2010Understanding,Koelle2020Survey,Hsieh2016Willing}.
+For on-body and wearable interfaces, factors such as body location and the surrounding social setting can shape comfort and perceived acceptability
+\cite{Profita2013DontMindMe,Kelly2016WearScale}.
+
+Public robot control adds an important twist: gestures are not only input to a system, but also a social signal to others.
+When the controlled device is a visible, moving robot---such as a drone---elicitation and metaphor-based work often yields larger, spatial, or interpersonal gestures for commanding it
+\cite{Cauchard2015DroneMe,Pfeil2013UAVGestures}.
+Separately, work on flying robots shows that robot motion can communicate intent to observers and shape perceived safety
+\cite{Szafir2014Intent}.
+This sets up a core design tension for public-facing deployment:
+do operators prefer discreet gestures to minimize embarrassment and social exposure,
+or do they prefer more expressive gestures because they feel more effective and make control more legible to observers?
+
+To address this question, we compare two gesture styles---discreet and expressive---that implement the same command set,
+and we evaluate them under two social contexts: a private condition and a public condition with bystanders present.
+We measure operator preference, willingness to use, perceived control, and task telemetry. We also attempted brief intercept probes with nearby bystanders during public blocks, but participation was too limited and inconsistent for quantitative analysis; we report this as a practical constraint on in-the-wild bystander measurement.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item A controlled comparison of discreet vs.\ expressive gesture sets implementing the same commands, evaluated under private vs.\ public-with-bystanders contexts.
+  \item Evidence characterizing trade-offs between social comfort, perceived control, and task efficiency across private vs. public contexts, grounded in operator self-report and system telemetry; we additionally report practical constraints encountered when probing bystanders in situ.
+  \item Design recommendations for gesture-based control of visible robots in public settings, grounded in operator outcomes and limited bystander observations.
+\end{enumerate}
+
+
+\section{Related Work}
+\subsection{Social acceptability of gestures and wearables}
+Work on mobile gestures and around-device interaction shows that gesture form factor and social context shape willingness to perform gestures in public
+\cite{Rico2010Usable,Rico2009GesturesAllAroundUs,Montero2010Understanding}.
+For head-worn displays and smart glasses, researchers have explored techniques such as hand-to-face input and willing-to-use-in-public gesture vocabularies
+\cite{Serrano2014HandToFace,Hsieh2016Willing}.
+Survey and measurement work further proposes constructs and instruments for assessing social acceptability (e.g., the WEAR scale)
+\cite{Koelle2020Survey,Kelly2016WearScale}.
+This literature motivates the expectation that discreet, less conspicuous gestures may better support public use, but it rarely considers cases where gestures must coordinate with a visible physical agent that moves through shared space.
+
+\subsection{Human-drone and human-robot interaction in public}
+Elicitation and metaphor-based approaches have been used to study how people want to command drones, often yielding spatial, upper-body, or interpersonal gestures
+\cite{Cauchard2015DroneMe,Pfeil2013UAVGestures}.
+Related work on flying robots further highlights that motion can communicate intent and shape perceived safety
+\cite{Szafir2014Intent}.
+Beyond interaction techniques, public acceptance of drones is shaped by broader concerns such as privacy, safety, and security
+\cite{Chang2017Spiders,Wang2023SocietalAcceptance}.
+Perceptions of drone form factors and physical characteristics can also influence how drones are perceived
+\cite{Wojciechowska2019DesigningDrones}.
+Together, these findings suggest that expressive gestures may feel appropriate in this domain, but they also raise questions about bystander comfort and the social costs of conspicuous control.
+
+\subsection{Design framing: norms, audience, and interpretability}
+Systematic reviews argue that social norms influence comfort, trust, and acceptance in HRI and should be treated as design constraints
+\cite{Lawrence2025SocialNorms}.
+For public robot control, the relevant audience extends beyond the operator.
+Gestures that appear more ``legible'' may reduce ambiguity for bystanders and help communicate that the robot is under intentional control,
+but these same gestures may increase conspicuousness and social exposure for the operator.
+This framing motivates studying gesture-based control as a multi-stakeholder interaction in which operator comfort and bystander interpretability may not align.
+
+\subsection{Summary and Research Questions}
+Prior work therefore points to competing design pressures: subtle gestures may maximize social acceptability for operators,
+while expressive, spatial gestures may better fit the mental model of commanding a visible moving robot and may increase perceived interpretability for observers.
+We investigate this tension by crossing gesture style (discreet vs.\ expressive) with social context (private vs.\ public with bystanders) and measuring operator responses, supplemented by limited bystander observations when feasible.
+
+In sum, our research questions were:\\
+\textbf{RQ1:} How does gesture style (discreet vs.\ expressive) affect operator preference, perceived control, and willingness to use?\\
+\textbf{RQ2:} How does social context (private vs.\ public with bystanders) interact with gesture style to shape these outcomes?\\
+\textbf{RQ3 (attempted):} How do bystanders perceive comfort, safety, and interpretability for discreet vs.\ expressive control?\\
+
+Where our hypotheses were:\\
+\textbf{H1:} Discreet gestures increase willingness to use in public, but may reduce perceived control/precision.\\
+\textbf{H2:} Expressive gestures increase perceived justification/legibility (i.e., that the interaction ``looks right'' and is interpretable to others), particularly in public contexts.\\
+
+\noindent\textit{Note:} We attempted brief bystander intercept probes during public blocks, but most passersby declined, were time-constrained, or reported limited attention; the resulting sample was too small and incomplete for quantitative analysis. Accordingly, we treat RQ3 as a motivating design consideration and focus analyses on operator outcomes.
+
+
+\section{Method}
+
+\subsection{Apparatus}
+Our system comprises (1) a wearable input device for capturing gestures, and (2) a clearly visible DIY 2DOF robot that executes basic navigation commands. We built a web server, ESP-based firmware, and a 3D-printable robot chassis (CAD) to support end-to-end, real-time gesture control. The robot provides real time guidance through six onboard LEDs that indicate where and when to move it during the task.
+
+% FIGURE 1: system overview / pipeline
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{raw/system_pipeline.png}
+  \Description{Block diagram of the study system: wearable armband to browser UI to web server to ESP32 controller to a pan--tilt robot, with telemetry logs recorded for analysis.}
+  \caption{System overview and logging pipeline. The wearable provides gesture inputs to the browser-based UI, which forwards events to a web server that issues motion commands to an ESP32 controller driving the pan--tilt robot. We log timestamped events and per-target summaries for analysis (time, gestures, and completion).}
+  \label{fig:pipeline}
+\end{figure}
+
+\paragraph{Wearable input device.}
+Participants wore a armband device that captured motion data for gesture recognition. The device includes 3 SNC neural sensors and 6-DoF IMU Accelerometer and Gyroscope sampled at 1000 $Hz$ and transmitted wirelessly to the server with Bluetooth low-energy (BLE). We recorded raw sensor streams and recognized command events with timestamps for later analysis.
+
+\paragraph{Robot platform.}
+The robot is a 3D-printed, pan--tilt platform (2DOF) actuated by SG90 servos. Although not a free-flying drone, the robot is intentionally visually noticeable and moves in a way that is readily observable to nearby people, enabling us to study gesture control in a public-facing setting without flight safety risks.
+
+% FIGURE 2 (Apparatus overview)
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{raw/robot/robot_1}
+    \Description{Photo of the small 3D-printed pan--tilt robot.}
+    \caption{Pan--tilt robot (3D printed).}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{raw/robot/robot_led}
+    \Description{Photo of the 2x3 LED cue display used for direction and progress feedback.}
+    \caption{LED cue ring (direction/progress).}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{raw/wearable/wearable_on_arm}
+    \Description{Photo of the armband-style wearable device on a forearm.}
+    \caption{Wearable input device.}
+  \end{subfigure}
+  \caption{Study apparatus. We used a visible pan--tilt robot with on-board LED cues and a wearable gesture input device.}
+  \label{fig:apparatus}
+\end{figure}
+
+\paragraph{LED guidance.}
+Six LEDs mounted on the robot, in a 2 by 3 grid, provided task guidance (e.g., indicating directionality or target orientation). During each trial, LEDs signaled:
+\begin{itemize}
+  \item \textbf{Idle state:} a green light was used to indicate the target direction (middle LEDs for up/down and bottom row left/right for left/right).
+  \item \textbf{Moving State:} only one light remains lit, in either solid white or yellow. The white light indicates movement, and the yellow light indicates movement in the target direction.
+  \item \textbf{When reaching target} a solid blue light indicates successful arrival at the target position.
+\end{itemize}
+Specifically for the discreet gesture set, the top right and left LEDs were used to indicate succesful gesture recognition, where the top left LED indicated neutural tap/pinch gestures, and the top right LED indicated reverse tap gestures.
+
+\paragraph{Study software + logging.}
+We implemented a browser-based study interface backed by a web-server that (a) receives interpreted gesture inputs from the wearable device, (b) sends motion commands to the robot, and (c) logs timestamped events (gesture events, target achievements, and end-of-block summaries).
+For each block, the system produces a run log (JSON) containing per-target completion times and gesture counts, as well as aggregate metrics (total time, total gestures).
+
+\subsection{Gesture Sets}
+We compare two gesture styles that implement the same command vocabulary but differ in execution style.
+
+\begin{itemize}
+  \item \textbf{Discreet:} low-amplitude wrist/hand movements performed close to the torso, designed to minimize visibility and social conspicuousness. To execute them, users perform combinations of tap/pinch and reverse tap gestures (Table~\ref{tab:gestures}).
+  \item \textbf{Expressive:} higher-amplitude arm gestures (involving elbow/shoulder) that visibly indicate direction, designed to maximize external legibility.
+\end{itemize}
+
+\paragraph{Command set.}
+The command vocabulary consists of four discrete commands: move up, down, turn left, and turn right. Commands were triggered upon recognition of the corresponding gesture and held as long as a pinch hold (and position for expressive gestures) is being held.
+
+% TABLE 1: gesture set comparison
+\input{tables/gesture_set}
+
+\paragraph{Gesture recognition and verification.}
+Before completing study tasks, participants underwent a structured training phase for both gesture sets. We verified recognition reliability by having participants perform 5-6 random movement commands. We logged recognition errors (false positives/negatives) and response latency to contextualize subjective ratings of control and willingness.
+
+\subsection{Design}
+We use a 2 $\times$ 2 within-subjects design crossing:
+\begin{enumerate}
+  \item \textbf{Gesture style:} discreet vs.\ expressive.
+  \item \textbf{Social context:} private vs.\ public with bystanders present.
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\input{tables/study_design_overview}
+\caption{Study design overview.}
+\label{tab:design}
+\end{table}
+
+\subsection{Participants}
+We recruited 9 adults (ages 27--37; 4 female and 5 male). We analyze 6 participants (3 female and 3 male); 3 sessions were excluded due to missing or highly incomplete logs due to participant time constraint stoppage. Among the analyzed participants, due to frustration, 3 stopped early during the discreet condition while attempting target 3 or 4 (in both private and public blocks); we include these partial blocks and mark them explicitly in the target-progress plots.
+
+\paragraph{Bystanders (attempted intercepts).}
+In public blocks, we attempted brief intercept prompts with passersby immediately after they observed part of a block. In practice, most declined, were time-constrained, or reported that they did not observe enough to answer. As a result, we did not obtain a consistent bystander dataset and do not report quantitative bystander outcomes.
+
+\subsection{Procedure}
+Each session followed the sequence below.
+
+\begin{enumerate}
+  \item \textbf{Consent and pre-survey:} demographics, prior experience with robots/drones and gesture interfaces, and baseline comfort using body movement in public.
+  \item \textbf{System introduction and safety briefing:} explanation of the robot's motion limits and the meaning of LED guidance cues.
+  \item \textbf{Training:} participants practiced both gesture sets with real-time feedback until meeting the verification criterion. Training order matched the upcoming block order to reduce interference.
+  \item \textbf{Task blocks (4 total):} participants completed navigation tasks under all four combinations of gesture style and context. After each block, participants completed brief self-report measures.
+  \item \textbf{Public blocks: attempted bystander intercepts:} we approached nearby passersby during public blocks to request brief impressions; participation was sparse and incomplete, and we therefore do not analyze bystander outcomes.
+  \item \textbf{Exit survey and interview:} comparative preferences, open-ended feedback on trade-offs, and suggestions for public-facing gesture design.
+\end{enumerate}
+
+
+\subsection{Task and command vocabulary}
+Participants completed repeated pose acquisition tasks:
+they issued commands to move the robot toward a sequence of target pan--tilt poses.
+Targets were indicated through the robot's LED cues, which provided directional guidance for how to adjust pose.
+A target was counted as complete when the robot entered a tolerance region around the target pose.
+Participants could correct overshoot and movements away from the target. Participants could end trials by signaling the experimenter or pressing the relevant button in the web interface to stop.
+
+% FIGURE 4 (Task schematic)
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{raw/task_schematic}
+  \Description{Scatter plot with pan on the x-axis and tilt on the y-axis, showing HOME and five sequential targets connected by arrows, with a tolerance region shown around one target.}
+  \caption{Task schematic. Participants used gestures to iteratively move the robot toward sequential pan--tilt targets. LEDs on the robot provided directional guidance toward the current target.}
+  \label{fig:task}
+\end{figure}
+
+
+\paragraph{Operationalizing social context.}
+In the private condition, the task took place in what participants described as a private setting (lab/office/closed room) with only the participant and experimenter present (no bystanders in view). In the public condition, the task took place in nearby public spaces with naturalistic passersby present.
+
+\subsection{Measures}
+
+\paragraph{Operator self-report.}
+After each block, participants reported comfort, perceived performance, control/confidence, social acceptability, justification/legibility, and workload, plus an open-ended diagnostic response.
+After all blocks, participants completed comparative items (e.g., preference in public vs private, precision, embarrassment, justification) and acceptability checklists (people/places). See Appendix~A for full item text.
+
+\paragraph{Behavioral + telemetry (from logs).}
+From the per-block run logs we compute:
+targets completed and completion rate, total elapsed time, total gesture count,
+and cumulative time/gestures to reach each sequential target (targets 1--5). For blocks that ended early, we also include partial progress on the attempted target where the block stopped (visualized separately).
+
+\paragraph{Bystander perception (planned; limited collection).}
+We intended to analyze bystander comfort observing, perceived safety, and understandability/legibility of the mapping from gesture to robot action, but recruitment during public blocks yielded too few consistent responses for quantitative analysis.
+
+\subsection{Analysis plan}
+We focus on within-participant effects of gesture style and social context.
+We report condition summaries (median and IQR) and paired within-subject comparisons.
+To test moderation by context, we compute an interaction-style contrast via a difference-of-differences:
+$(E{-}D)_{\text{public}} - (E{-}D)_{\text{private}}$.
+Where appropriate, we supplement effect sizes with nonparametric paired inference (e.g., sign-flip/permutation tests) and bootstrap confidence intervals.
+
+
+\section{Results}
+\subsection{Manipulation checks}
+Across sessions, the study system logged distinct event types for the two gesture sets (Table~\ref{tab:gestures}).
+Discreet blocks produced click-like events (\texttt{LeftClick}/\texttt{RightClick}), while expressive blocks produced directional events (\texttt{ArrowUp/Down/Left/Right}).
+All blocks used the same target plan (5 sequential targets) and comparable controller parameters (step size and tolerance), enabling a direct comparison across conditions.
+
+\subsection{Operator outcomes}
+We analyze $n{=}6$ participants (24 total blocks: 2 gesture sets $\times$ 2 contexts).
+For blocks that ended early, we include partial progress on the attempted target and visualize it explicitly rather than excluding it.
+
+\paragraph{Task performance (telemetry).}
+Expressive gestures achieved complete task success across blocks (median targets completed $=5$ [IQR 5--5]; median completion rate $=1.0$ [1.0--1.0]).
+Discreet gestures were less reliable (median targets completed $=4$ [3--5]; median completion rate $=0.8$ [0.6--1.0]), and 6/12 discreet blocks were stopped early (3 participants; both contexts), always while attempting target 4.
+Figure~\ref{fig:completion} summarizes targets completed and completion rates by gesture set.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{targets_completed_by_preset.pdf}
+    \Description{Plot comparing targets completed for discreet vs expressive blocks, summarized with medians and interquartile ranges.}
+    \caption{Targets completed (0--5).}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{completion_rate_by_preset.pdf}
+    \Description{Plot comparing completion rate for discreet vs expressive blocks, summarized with medians and interquartile ranges.}
+    \caption{Completion rate.}
+  \end{subfigure}
+  \caption{Task completion outcomes by gesture set. Points show medians; bars show IQR.}
+  \label{fig:completion}
+\end{figure}
+
+\paragraph{Efficiency (time and gestures).}
+Expressive gestures required substantially fewer actions and less time to make progress, both in private and in public settings, and reached all five targets in every block.
+In contrast, discreet performance bifurcated: half of discreet blocks completed all five targets, while the other half were stopped by target 4. Figure~\ref{fig:efficiency} shows cumulative progress to targets 1--5, with early-stopped blocks shown as hatched bars at the target where the block ended.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{time_to_targets_progress_by_preset.pdf}
+    \Description{Bar charts showing cumulative time to reach targets 1 through 5 for discreet vs expressive blocks, split by context. Hatched bars indicate blocks that stopped early on the attempted target.}
+    \caption{Cumulative time by target.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{gestures_to_targets_progress_by_preset.pdf}
+    \Description{Bar charts showing cumulative gesture counts to reach targets 1 through 5 for discreet vs expressive blocks, split by context. Hatched bars indicate blocks that stopped early on the attempted target.}
+    \caption{Cumulative gestures by target.}
+  \end{subfigure}
+  \caption{Efficiency outcomes by gesture set and progress through the 5-target sequence (median with IQR). Hatched bars denote early-stopped blocks at the target where the block ended.}
+  \label{fig:efficiency}
+\end{figure}
+
+Figure~\ref{fig:gestures_per_target} further illustrates the per-target gesture counts, showing that discreet gestures required substantially more attempts to reach later targets.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{gestures_per_target_distribution.pdf}
+  \Description{Box plot showing median and IQR of gestures required per target index (1--5), split by gesture set (discreet vs expressive). Discreet shows higher median gesture counts with larger variance, especially for later targets.}
+  \caption{Gestures per target by target index (median with IQR). Discreet gestures required more attempts, particularly for later targets.}
+  \label{fig:gestures_per_target}
+\end{figure}
+
+\paragraph{Subjective ratings after each block.}
+Figure~\ref{fig:questionnaire} summarizes block questionnaire ratings.
+Participants rated expressive as higher-performing and more controllable, with lower workload.
+In particular, expressive increased perceived performance (median 5.0 vs.\ 2.0 for discreet) and control/confidence (median 5.75 vs.\ 2.62), and reduced workload (median 2.38 vs.\ 4.25; lower is better).
+Expressive also increased perceived justification/legibility, and this advantage was larger in public blocks (paired mean difference in justification mean: +2.42 in public vs.\ +1.25 in private).
+In contrast, comfort and social acceptability were similar across gesture sets in public blocks, suggesting that (in this study) performance and control dominated any social benefit of discreetness.
+
+\begin{figure*}[!htb]
+  \centering
+  \includegraphics[width=0.95\textwidth]{questionnaire_ratings_grid.pdf}
+  \Description{Grid of plots comparing block questionnaire ratings for discreet versus expressive, showing medians and interquartile ranges across multiple scales (comfort, performance, control, social, justification, workload).}
+  \caption{Block questionnaire ratings by gesture set. Points show medians; bars show IQR.}
+  \label{fig:questionnaire}
+\end{figure*}
+
+\paragraph{Final comparative preferences and acceptability.}
+In the final comparative items (Likert: 1=Discreet, 7=Expressive), participants preferred expressive gestures in both public and private contexts (mean preference $\approx$6.0--6.5), and rated expressive as more precise (mean 6.75) and more justified (mean 5.25).
+Expressive was rated as slightly more embarrassing (mean 4.25), suggesting a mild social cost that was outweighed by gains in efficiency and perceived control (Figure~\ref{fig:final}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{final_comparison_ratings.pdf}
+  \Description{Bar chart of final comparison ratings where 1 means discreet and 7 means expressive, showing mean values with 95 percent confidence intervals for preference, precision, embarrassment, and justification.}
+  \caption{Final comparison ratings (1=Discreet, 7=Expressive): mean with 95\% CI.}
+  \label{fig:final}
+\end{figure}
+
+Acceptability checklists indicated broad willingness to use both sets across audiences and locations, including around strangers and in public places (Figure~\ref{fig:acceptability}).
+Notably, high acceptability did not imply comparable \emph{performance}: discreet gestures were often acceptable in principle, but participants still reported mis-recognition and loss of control in practice.
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{acceptability_discreet_people.pdf}
+    \Description{Horizontal bar chart of the percentage of participants selecting each audience category where discreet gestures are acceptable.}
+    \caption{Discreet: acceptable people.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{acceptability_expressive_people.pdf}
+    \Description{Horizontal bar chart of the percentage of participants selecting each audience category where expressive gestures are acceptable.}
+    \caption{Expressive: acceptable people.}
+  \end{subfigure}
+
+  \vspace{0.6em}
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{acceptability_discreet_locations.pdf}
+    \Description{Horizontal bar chart of the percentage of participants selecting each location category where discreet gestures are acceptable.}
+    \caption{Discreet: acceptable locations.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{acceptability_expressive_locations.pdf}
+    \Description{Horizontal bar chart of the percentage of participants selecting each location category where expressive gestures are acceptable.}
+    \caption{Expressive: acceptable locations.}
+  \end{subfigure}
+  \caption{Acceptability checklists (percentage selecting each category). Denominator = participants with a response for this item.}
+  \label{fig:acceptability}
+\end{figure*}
+
+\subsection{Bystander outcomes}
+We attempted brief intercept prompts with passersby during public blocks, but participation was sparse and inconsistent.
+As a result, we do not report quantitative bystander measures.
+However, a practical observation emerged: many bystanders did not watch long enough to form a confident interpretation of the mapping.
+
+\subsection{Qualitative themes}
+Open-ended diagnostics reinforce the quantitative pattern that recognition reliability and perceived control were the dominant drivers of preference.
+Across participants, we observed three recurring themes:
+\begin{itemize}
+  \item \textbf{Discreet gestures traded social subtlety for reliability.} Participants described discreet control as ``not intuitive'' and reported missed recognitions that led to repeated attempts and frustration.
+  \item \textbf{Expressive gestures felt more direct and predictable.} Participants described expressive control as ``more intuitive'' and ``quicker'' to correct the robot's pose.
+  \item \textbf{Public context did not dominate experience in this setting.} At least one participant explicitly noted that the crowd ``didn't disturb,'' consistent with the small differences on the social acceptability scale.
+\end{itemize}
+
+\section{Discussion}
+\subsection{Summary of findings}
+Across both contexts, expressive gestures outperformed discreet gestures on objective telemetry (completion, time, and gesture count) and were rated as more controllable, higher-performing, and less mentally/physically demanding.
+While discreet gestures were designed to reduce public awkwardness, we did not observe a corresponding improvement in comfort or social acceptability during public blocks.
+Instead, the primary determinant of preference was \emph{control quality}: when discreet recognition failed or required repeated retries, its social subtlety did not compensate for the loss of predictability.
+
+\subsection{Why expressive ``won'' even in public}
+Prior work on mobile and wearable gestures often finds that subtle gestures are preferred around others.
+Our results suggest that when controlling a \emph{visible moving object}, the calculus can shift: expressive gestures may feel more appropriate to the task, and may help users form a clear mental model of the mapping between action (gesture) and outcome (robot motion).
+In our study, participants rated expressive as more justified/legible, and this advantage was especially pronounced in public blocks.
+Importantly, the robot itself served as an attention magnet; once a moving robot is present, the marginal social cost of a larger gesture may be small compared to the benefit of completing the task quickly and confidently.
+
+\subsection{Design implications}
+\paragraph{1 - Make reliability the first-class social feature.}
+Social acceptability is fragile when recognition is unreliable.
+Participants' frustration with missed recognitions in the discreet set indicates that even subtle gestures can become \emph{socially risky} if they require repeated attempts or lead to visible trial-and-error.
+For public deployment, designers should prioritize robust recognition (or explicit confirmation) for subtle gestures, and provide immediate, unambiguous feedback for both recognition and command execution.
+
+\paragraph{2 - Provide an escalation ladder: subtle by default, expressive on demand.}
+Rather than choosing between discreet and expressive, systems can support both as complementary modes:
+use subtle gestures for routine adjustments and allow a deliberate ``escalation'' (e.g., a hold or mode switch) for expressive, highly legible commands when users need clarity or recovery.
+This aligns with our finding that expressive improved recovery and confidence, while discreet may still be desirable when users want to minimize movement.
+
+\paragraph{3 - Shift legibility from the body to the robot when possible.}
+If expressive gestures are intended to help bystanders understand what is happening, the same goal may be achieved with robot-side cues: directional LEDs, motion previews, or brief confirmation animations.
+This can reduce the need for large public gestures while preserving interpretability for observers.
+
+
+\subsection{Measuring bystanders in the wild}
+Our difficulty collecting bystander intercept data highlights a methodological challenge: real-world bystanders often lack the time, attention, or perceived relevance to answer questions about an interaction they only glimpsed briefly.
+Future work can complement in-situ probes with alternative approaches such as (a) short video vignettes shown to recruited participants, (b) passive measures of attention (e.g., gaze or dwell time) with strong privacy protections, or (c) structured public demonstrations with opt-in observation areas.
+
+\section{Limitations}
+During the study, we encountered several limitations:
+\begin{itemize}
+  \item \textbf{Sample size and diversity:} limited generalizability due to a small sample; participants were affiliated with a university setting.
+  \item \textbf{Environment setting:} the private setting varied (lab/office/room) based on participant constraints; the public setting was typically a high-traffic indoor campus area and may not generalize to outdoor or non-academic environments.
+  \item \textbf{Robot capabilities:} due to practical and regulatory constraints, we used a DIY pan--tilt robot rather than a free-flying drone. This limits motion dynamics and may affect perceived risk and realism.
+  \item \textbf{Wearable recognition limits:} the wearable device and recognition pipeline exhibited variable accuracy, which strongly influenced perceived control (especially for discreet gestures). The device also required tight fastening, which some participants found uncomfortable.
+  \item \textbf{Measurement constraints:} reliance on self-report measures can introduce bias; future work should complement them with additional objective measures (e.g., failure modes, recovery time, and observer attention).
+\end{itemize}
+
+\section{Ethics and Safety}
+All participants provided informed consent prior to participation. Safety measures were implemented to ensure that the robot operated within safe parameters, including speed limits and emergency stop functions. Participants were briefed on safety procedures and instructed to stop the robot immediately if they felt uncomfortable at any point during the study.
+
+\section{Conclusion}
+We compared discreet and expressive gesture sets for controlling a visible pan--tilt robot across private and public-with-bystanders contexts.
+In this study, expressive gestures consistently produced better task outcomes (higher completion, lower time, and fewer gestures) and were perceived as more controllable and effective, with lower workload.
+We did not observe a strong social comfort advantage for discreet gestures in the public condition; instead, recognition reliability and perceived control were the dominant drivers of preference.
+These results suggest that for public robot control, designers should treat robustness and clear feedback as foundational to social acceptability, and consider hybrid designs that enable subtle default control with optional expressive escalation when legibility or recovery is needed.
+
+
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\appendix
+\section{Supplementary Materials}
+All code and materials are available at: \url{https://github.com/Kiiwii10/discreet-vs-expressive-gestures}
+
+\section{Supplementary Telemetry Figures}
+This appendix provides additional visualizations of task telemetry to complement the main results.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{elapsed_total_by_preset.pdf}
+    \Description{Bar chart showing median total block time in seconds for discreet vs expressive gesture sets.}
+    \caption{Total block time (s).}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{gestures_total_by_preset.pdf}
+    \Description{Bar chart showing median total gesture count for discreet vs expressive gesture sets.}
+    \caption{Total gestures per block.}
+  \end{subfigure}
+  \caption{Aggregate efficiency metrics by gesture set (median with IQR).}
+  \label{fig:appendix_totals}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{time_per_target_by_preset.pdf}
+    \Description{Line plot showing mean time per target for each target index, split by gesture set, with 95 percent confidence interval shading.}
+    \caption{Time per target (mean with 95\% CI).}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{gestures_per_target_by_preset.pdf}
+    \Description{Line plot showing mean gestures per target for each target index, split by gesture set, with 95 percent confidence interval shading.}
+    \caption{Gestures per target (mean with 95\% CI).}
+  \end{subfigure}
+  \caption{Per-target efficiency trends by gesture set (mean with 95\% CI).}
+  \label{fig:appendix_per_target}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{time_first3_by_preset.pdf}
+    \Description{Bar chart showing median time to complete first 3 targets for discreet vs expressive gesture sets.}
+    \caption{Time for first 3 targets (s).}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{gestures_first3_by_preset.pdf}
+    \Description{Bar chart showing median gesture count for first 3 targets for discreet vs expressive gesture sets.}
+    \caption{Gestures for first 3 targets.}
+  \end{subfigure}
+  \caption{Early-block efficiency (first 3 targets) by gesture set (median with IQR). Restricting to the first 3 targets avoids confounding from early-stopped blocks.}
+  \label{fig:appendix_first3}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{expressive_direction_share_by_target.pdf}
+  \Description{Stacked bar chart showing the share of expressive Arrow-key gestures classified as towards, away, or off-axis relative to the target direction, for each target index.}
+  \caption{Expressive only: share of Arrow-key gestures classified as towards/away/off-axis relative to the start-of-target delta. This illustrates directional accuracy during expressive control.}
+  \label{fig:appendix_direction}
+\end{figure}
+
+\section{Questionnaire Items}
+\input{tables/question_blocks_a}
+\input{tables/question_blocks_b}
+\input{tables/question_blocks_c}
+
+\end{document}

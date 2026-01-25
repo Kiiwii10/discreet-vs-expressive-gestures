@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guided Test</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="page">
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="app-header">
+      <div>
+        <p class="eyebrow" data-i18n="test.eyebrow">Guided Test</p>
+        <h1 data-i18n="test.title">Gesture Study Flow</h1>
+        <p class="subtitle" data-i18n="test.subtitle">
+          Follow the steps. You can stop a test at any time to answer the next questions.
+        </p>
+      </div>
+      <div class="header-tools">
+        <button id="lang-toggle" class="ghost small" type="button"></button>
+        <button id="esp-mode-toggle" class="ghost small" type="button"></button>
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span id="connection-status" data-i18n="status.connecting">Connecting...</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="screens">
+      <section class="screen active">
+        <div class="top-bar">
+          <button id="exit-test" class="ghost" data-i18n="test.exit">Exit</button>
+          <span class="mode-pill"><span data-i18n="test.session">Session</span>: <span id="session-summary">--</span></span>
+          <span class="mode-pill"><span data-i18n="test.gesture_set">Gesture Set</span>: <span id="preset-label">--</span></span>
+        </div>
+
+        <div class="card wizard">
+            <div class="wizard-steps" aria-hidden="true">
+              <div class="wizard-step" data-step="consent" data-i18n="test.step.consent">Consent</div>
+              <div class="wizard-step" data-step="prestudy" data-i18n="test.step.background">Background</div>
+              <div class="wizard-step" data-step="discreet" data-i18n="test.step.discreet">Discreet Test</div>
+              <div class="wizard-step" data-step="discreet-questions" data-i18n="test.step.discreet_questions">Discreet Questions</div>
+              <div class="wizard-step" data-step="expressive" data-i18n="test.step.expressive">Expressive Test</div>
+              <div class="wizard-step" data-step="expressive-questions" data-i18n="test.step.expressive_questions">Expressive Questions</div>
+              <div class="wizard-step" data-step="final" data-i18n="test.step.final">Final</div>
+              <div class="wizard-step" data-step="done" data-i18n="test.step.done">Done</div>
+            </div>
+
+          <div id="stage-consent" class="wizard-stage active">
+            <h2 data-i18n="test.consent.title">Consent and Session Info</h2>
+            <p class="muted" data-i18n="test.consent.subtitle">Participation is anonymous and you may stop at any time.</p>
+            <div class="form-grid">
+              <label class="field">
+                <span data-i18n="test.participant_id">Participant ID</span>
+                <input id="user-id" type="text" autocomplete="off" required />
+              </label>
+                <label class="field">
+                  <span data-i18n="test.condition_order">Study condition order</span>
+                  <select id="condition-order" required>
+                    <option value="" selected disabled data-i18n="test.condition_order.placeholder">Select order</option>
+                    <option value="order_discreet" data-i18n="test.condition_order.discreet_first">Order Discreet (discreet then expressive)</option>
+                    <option value="order_expressive" data-i18n="test.condition_order.expressive_first">Order Expressive (expressive then discreet)</option>
+                  </select>
+                </label>
+            </div>
+            <div class="question">
+              <span class="label" data-i18n="test.environment.label">Environment type (this session)</span>
+              <div class="option-grid">
+                <label class="option">
+                  <input type="radio" name="environment" value="Private (Lab)" required />
+                  <span data-i18n="test.environment.private">Private (Lab)</span>
+                </label>
+                <label class="option">
+                  <input type="radio" name="environment" value="Public (Hallway/Lobby)" required />
+                  <span data-i18n="test.environment.public">Public (Hallway/Lobby)</span>
+                </label>
+              </div>
+            </div>
+            <div class="wizard-footer">
+              <span></span>
+              <button id="consent-next" class="primary" data-i18n="test.continue">Continue</button>
+            </div>
+            <p id="consent-error" class="inline-note hidden"></p>
+          </div>
+
+          <div id="stage-prestudy" class="wizard-stage">
+            <h2 data-i18n="test.prestudy.title">Background (Pre-study)</h2>
+            <p class="muted" data-i18n="test.prestudy.subtitle">Answer a few questions before starting the tests.</p>
+            <div id="prestudy-form" class="form-stack"></div>
+            <div class="wizard-footer">
+              <button id="prestudy-back" class="ghost" data-i18n="test.back">Back</button>
+              <button id="prestudy-next" class="primary" data-i18n="test.continue">Continue</button>
+            </div>
+            <p id="prestudy-error" class="inline-note hidden"></p>
+          </div>
+
+          <div id="stage-discreet-start" class="wizard-stage">
+            <h2 data-i18n="test.discreet.title">Discreet Gesture Set</h2>
+            <p class="muted" data-i18n="test.discreet.subtitle">Complete the target movements with the discreet gestures.</p>
+            <div class="wizard-footer">
+              <button id="discreet-back" class="ghost" data-i18n="test.back">Back</button>
+              <button id="start-discreet" class="primary" data-i18n="test.start_discreet">Start Discreet Test</button>
+            </div>
+          </div>
+
+          <div id="stage-run" class="wizard-stage">
+            <div class="wizard-header-row">
+              <h2 id="run-heading">Targets</h2>
+              <span id="target-progress" class="progress"></span>
+            </div>
+
+            <div class="test-split">
+              <div class="card inner">
+                <h3 data-i18n="test.run.target_pose">Target Pose</h3>
+                <button id="mouse-lock" class="mouse-lock" type="button"></button>
+                <div id="success-banner" class="success-banner hidden" aria-live="polite"></div>
+                <div id="pose-compare" class="pose-compare">
+                  <div class="pose-box">
+                    <div class="pose-title" data-i18n="test.run.target">Target</div>
+                    <div class="pose-values">
+                      <div class="pose-value">
+                        <span class="label" data-i18n="free.pan">Pan</span>
+                        <strong id="target-pan">--</strong>
+                      </div>
+                      <div class="pose-value">
+                        <span class="label" data-i18n="free.tilt">Tilt</span>
+                        <strong id="target-tilt">--</strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pose-box">
+                    <div class="pose-title" data-i18n="test.run.current">Current</div>
+                    <div class="pose-values">
+                      <div class="pose-value">
+                        <span class="label" data-i18n="free.pan">Pan</span>
+                        <strong id="current-pan">--</strong>
+                      </div>
+                      <div class="pose-value">
+                        <span class="label" data-i18n="free.tilt">Tilt</span>
+                        <strong id="current-tilt">--</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card inner">
+                <h3 data-i18n="test.run.gesture_map">Gesture Map</h3>
+                <div id="gesture-grid" class="gesture-grid"></div>
+                <div class="stop-area">
+                  <span class="muted" data-i18n="test.run.stop_hint">You can stop the test at any point.</span>
+                  <button id="stop-test" class="ghost" data-i18n="test.run.stop_button">Stop and Continue to Questions</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="stage-block-questions" class="wizard-stage">
+            <h2 id="block-title">Block Questions</h2>
+            <p id="block-subtitle" class="muted"></p>
+            <div id="block-form" class="form-stack"></div>
+            <div class="wizard-footer">
+              <button id="block-skip" class="ghost" data-i18n="test.block.skip">Skip Questions</button>
+              <button id="block-next" class="primary" data-i18n="test.block.continue">Continue</button>
+            </div>
+            <p id="block-error" class="inline-note hidden"></p>
+          </div>
+
+          <div id="stage-expressive-start" class="wizard-stage">
+            <h2 data-i18n="test.expressive.title">Expressive Gesture Set</h2>
+            <p class="muted" data-i18n="test.expressive.subtitle">
+              Complete the target movements with the expressive gestures.
+            </p>
+            <div class="wizard-footer">
+              <button id="expressive-back" class="ghost" data-i18n="test.back">Back</button>
+              <button id="start-expressive" class="primary" data-i18n="test.start_expressive">Start Expressive Test</button>
+            </div>
+          </div>
+
+          <div id="stage-final" class="wizard-stage">
+            <h2 data-i18n="test.final.title">End of Session</h2>
+            <p class="muted" data-i18n="test.final.subtitle">Answer the final questions about both gesture sets.</p>
+            <div id="final-form" class="form-stack"></div>
+            <div class="wizard-footer">
+              <button id="final-skip" class="ghost" data-i18n="test.final.skip">Skip Questions</button>
+              <button id="final-submit" class="primary" data-i18n="test.final.finish">Finish Session</button>
+            </div>
+            <p id="final-error" class="inline-note hidden"></p>
+          </div>
+
+          <div id="stage-done" class="wizard-stage">
+            <h2 data-i18n="test.done.title">Finished</h2>
+            <p class="muted" data-i18n="test.done.subtitle">Thanks. You can exit now.</p>
+            <div class="wizard-footer">
+              <button id="done-home" class="primary" data-i18n="test.done.home">Back to Home</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="overlay" class="overlay hidden" aria-live="polite">
+      <div class="overlay-card">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+          <div class="overlay-title" data-i18n="overlay.connecting">Connecting to ESP...</div>
+          <div class="overlay-sub" data-i18n="overlay.return_home">Returning to home if not available.</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/test/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pan/Tilt Control Studio</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="app-header">
+      <div>
+        <p class="eyebrow" data-i18n="home.eyebrow">Robot Control Lab</p>
+        <h1 data-i18n="home.title">Pan/Tilt Control Studio</h1>
+        <p class="subtitle" data-i18n="home.subtitle">
+          Choose a mode. The system connects to the ESP on COM4 automatically.
+        </p>
+      </div>
+      <div class="header-tools">
+        <button id="lang-toggle" class="ghost small" type="button"></button>
+        <button id="esp-mode-toggle" class="ghost small" type="button"></button>
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span id="connection-status" data-i18n="status.connecting">Connecting...</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="screens">
+      <section class="screen active">
+        <div class="card hero">
+          <h2 data-i18n="home.start">Start</h2>
+          <p class="muted" data-i18n="home.select">Select what you want to run.</p>
+          <div class="choice-grid">
+            <button id="go-free" class="choice">
+              <span class="choice-title" data-i18n="home.free.title">Free Play</span>
+              <span class="choice-sub" data-i18n="home.free.sub">Explore and change control style on the fly.</span>
+            </button>
+            <button id="go-test" class="choice">
+              <span class="choice-title" data-i18n="home.test.title">Guided Test</span>
+              <span class="choice-sub" data-i18n="home.test.sub">Wizard flow with target poses and completion steps.</span>
+            </button>
+          </div>
+          <p id="home-hint" class="inline-note"></p>
+        </div>
+      </section>
+    </main>
+
+    <div id="overlay" class="overlay hidden" aria-live="polite">
+      <div class="overlay-card">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+          <div class="overlay-title" data-i18n="overlay.connecting">Connecting to ESP...</div>
+          <div class="overlay-sub" data-i18n="overlay.ensure">Make sure it is available on COM4.</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/home/app.js"></script>
+  </body>
+</html>
